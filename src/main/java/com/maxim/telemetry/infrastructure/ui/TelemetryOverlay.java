@@ -85,6 +85,7 @@ public class TelemetryOverlay {
 
             VBox root = new VBox(5);
             root.setPadding(new Insets(10));
+            root.setPrefWidth(180); // Un poco mas ancho
             root.setStyle("-fx-background-color: rgba(0, 0, 0, 0.7); -fx-background-radius: 10;");
 
             Label title = new Label("TELEMETRY");
@@ -100,11 +101,14 @@ public class TelemetryOverlay {
 
             setupLabel(MetricType.CPU_USAGE, "#00ff00", root);
             setupLabel(MetricType.RAM_USAGE, "#00ffff", root);
+            setupLabel(MetricType.GPU_USAGE, "#ff8800", root);
             setupLabel(MetricType.VRAM_USAGE, "#ffff00", root);
             setupLabel(MetricType.FPS, "#ff00ff", root);
 
             HBox controls = new HBox(5);
             controls.setAlignment(Pos.CENTER);
+            controls.setVisible(false); // Ocultar pero no borrar
+            controls.setManaged(false); // No ocupa espacio
             Button btnStart = new Button("REC");
             Button btnStop = new Button("STOP");
             btnStart.setStyle("-fx-font-size: 9px;");

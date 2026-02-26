@@ -38,7 +38,7 @@ public class RecordingService {
         }
     }
 
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedRate = 100)
     public void collect() {
         try {
             String activeGame = processService.getActiveWindowTitle();
