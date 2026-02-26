@@ -23,27 +23,26 @@ public class MetricService {
     private final SystemInfo systemInfo = new SystemInfo();
     private final HardwareAbstractionLayer hal = systemInfo.getHardware();
 
+    // Capturar metricas actuales
     public List<TelemetryEntry> gatherMetrics(String sessionName) {
         List<TelemetryEntry> entries = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
 
-        // CPU Usage
+        // Uso de CPU
         CentralProcessor processor = hal.getProcessor();
         double cpuLoad = processor.getSystemCpuLoad(1000) * 100;
         entries.add(createEntry(sessionName, MetricType.CPU_USAGE, cpuLoad, "%", now));
 
-        // RAM Usage
+        // Uso de RAM
         GlobalMemory memory = hal.getMemory();
-        long available = memory.getAvailable();
-        long total = memory.getTotal();
-        double ramUsed = (double) (total - available) / (1024 * 1024 * 1024);
+        double ramUsed = (double) (memory.getTotal() - memory.getAvailable()) / (1024 * 1024 * 1024);
         entries.add(createEntry(sessionName, MetricType.RAM_USAGE, ramUsed, "GB", now));
 
-        // GPU VRAM
+        // VRAM GPU
         List<GraphicsCard> graphicsCards = hal.getGraphicsCards();
         if (!graphicsCards.isEmpty()) {
             GraphicsCard gpu = graphicsCards.get(0);
-            double vramUsed = (double) (gpu.getVRam() / (1024.0 * 1024.0 * 1024.0));
+            double vramUsed = (double) gpu.getVRam() / (1024.0 * 1024.0 * 1024.0);
             entries.add(createEntry(sessionName, MetricType.VRAM_USAGE, vramUsed, "GB", now));
         }
 
@@ -67,27 +66,21 @@ public class MetricService {
                 .build();
     }
     
-    public Double getAverage(String serverName, MetricType type) {
-        return repository.findByServerName(serverName).stream()
+    public Double getAverage(String name, MetricType type) {
+        return repository.findByServerName(name).stream()
                 .filter(e -> e.getMetricType() == type)
-                .mapToDouble(TelemetryEntry::getValue)
-                .average()
-                .orElse(0.0);
+                .mapToDouble(TelemetryEntry::getValue).average().orElse(0.0);
     }
 
-    public Double getMax(String serverName, MetricType type) {
-        return repository.findByServerName(serverName).stream()
+    public Double getMax(String name, MetricType type) {
+        return repository.findByServerName(name).stream()
                 .filter(e -> e.getMetricType() == type)
-                .mapToDouble(TelemetryEntry::getValue)
-                .max()
-                .orElse(0.0);
+                .mapToDouble(TelemetryEntry::getValue).max().orElse(0.0);
     }
 
-    public Double getMin(String serverName, MetricType type) {
-        return repository.findByServerName(serverName).stream()
+    public Double getMin(String name, MetricType type) {
+        return repository.findByServerName(name).stream()
                 .filter(e -> e.getMetricType() == type)
-                .mapToDouble(TelemetryEntry::getValue)
-                .min()
-                .orElse(0.0);
+                .mapToDouble(TelemetryEntry::getValue).min().orElse(0.0);
     }
 }

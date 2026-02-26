@@ -23,7 +23,7 @@ public class TelemetryEntry {
     private String serverName;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "metric_type", nullable = false)
     private MetricType metricType;
 
     @Column(nullable = false)

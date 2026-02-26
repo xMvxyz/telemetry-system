@@ -17,36 +17,48 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class RecordingService {
 
     private final MetricService metricService;
+    private final ProcessService processService;
     private final AtomicBoolean isRecording = new AtomicBoolean(false);
     private String currentSession = "Default";
 
     public void startRecording(String session) {
-        this.currentSession = session;
+        // Si no se pasa nombre, usar el juego detectado
+        this.currentSession = (session == null || session.equals("manual-session")) 
+            ? processService.getActiveWindowTitle() 
+            : session;
         this.isRecording.set(true);
-        System.out.println("🔴 Sesión iniciada: " + session);
+        System.out.println("Sesion iniciada: " + currentSession);
     }
 
     public void stopRecording() {
-        this.isRecording.set(false);
-        System.out.println("⏹️ Sesión finalizada: " + currentSession);
-        printSummary();
+        if (isRecording.get()) {
+            this.isRecording.set(false);
+            System.out.println("Sesion finalizada: " + currentSession);
+            imprimirResumen();
+        }
     }
 
     @Scheduled(fixedRate = 1000)
     public void collect() {
-        List<TelemetryEntry> entries = metricService.gatherMetrics(currentSession);
-        
-        // Update Overlay
-        entries.forEach(entry -> {
-            String formattedValue = String.format("%.1f %s", entry.getValue(), entry.getUnit());
-            TelemetryOverlay.updateMetric(entry.getMetricType(), formattedValue);
-        });
+        try {
+            String activeGame = processService.getActiveWindowTitle();
+            TelemetryOverlay.updateGame(activeGame);
 
-        // Update recording status in overlay
-        TelemetryOverlay.updateStatus(isRecording.get() ? "🔴 RECORDING" : "IDLE");
+            List<TelemetryEntry> entries = metricService.gatherMetrics(currentSession);
+            
+            // Actualizar UI
+            entries.forEach(entry -> {
+                String valorFormateado = String.format("%.1f %s", entry.getValue(), entry.getUnit());
+                TelemetryOverlay.updateMetric(entry.getMetricType(), valorFormateado);
+            });
 
-        if (isRecording.get()) {
-            metricService.saveAll(entries);
+            TelemetryOverlay.updateStatus(isRecording.get() ? "REC" : "IDLE");
+
+            if (isRecording.get()) {
+                metricService.saveAll(entries);
+            }
+        } catch (Exception e) {
+            // Silenciar si el overlay no esta listo
         }
     }
 
@@ -62,15 +74,11 @@ public class RecordingService {
         return summary;
     }
 
-    private void printSummary() {
-        System.out.println("📊 --- RESUMEN DE LA SESIÓN --- 📊");
+    private void imprimirResumen() {
+        System.out.println("--- RESUMEN DE SESION ---");
         getSummary().forEach((metric, stats) -> {
             System.out.printf("%s -> AVG: %.2f | MAX: %.2f | MIN: %.2f%n", 
                 metric, stats.get("avg"), stats.get("max"), stats.get("min"));
         });
-    }
-
-    public boolean isRecording() {
-        return isRecording.get();
     }
 }

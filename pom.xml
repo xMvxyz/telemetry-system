@@ -15,7 +15,7 @@
 	<description>Sistema de telemetría para monitoreo de recursos (CPU, RAM, GPU)</description>
 
 	<properties>
-		<java.version>22</java.version>
+		<java.version>21</java.version>
 	</properties>
 
 	<dependencies>
